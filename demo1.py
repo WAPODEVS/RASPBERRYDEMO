@@ -60,16 +60,25 @@ class Modbus:
 if __name__ == "__main__":
 
     escritura_registros_flag = True
+    lectura_registros_flag = True
 
     # Creacion del objeto modbus
     modbus0 = Modbus(port = "RR", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
 
+    if modbus0.connect():
+        print("Conexión exitosa")
+
     # Prueba de escritura de registros
 
+    print("================================")
+    print("Prueba de escritura de registros")
+    print("================================")
+
     while escritura_registros_flag:
-        registro = int(input("Ingrese la dirección del registro al que quiere escribir un valor"))
-        value = int(input("Ingrese el valor que quiere enviar al esclavo"))
-        slaveID = int(input("Ingresar el ID del esclavo al que desea enviar el dato"))
+
+        registro = int(input("Ingrese la dirección del registro al que quiere escribir un valor :"))
+        value = int(input("Ingrese el valor que quiere enviar al esclavo : "))
+        slaveID = int(input("Ingresar el ID del esclavo al que desea enviar el dato : "))
 
         modbus0.escribir_register(registro = registro, value = value, slave = slaveID)
 
@@ -78,5 +87,23 @@ if __name__ == "__main__":
         escritura_registros_flag = True if repeat == 'Y' else False
 
     # Prueba de lectura de registros
-    
-    registers_slave = modbus0.leer_registros()
+
+    print("================================")
+    print("Prueba de lectura de registros")
+    print("================================")
+
+    while lectura_registros_flag:
+
+        registro_inicio = int(print("Ingrese la dirección del registro donde se iniciará la lectura : "))
+        num_registros = int(print("Ingrese la cantidad de registros que desea leer : "))
+        slaveID = int(input("Ingresar el ID del esclavo al que desea enviar el dato : "))
+
+        registros_esclavo = modbus0.leer_registros(registro_inicio = registro_inicio, num_registros = num_registros, esclavo = slaveID)
+
+        print("\nSe leyeron los siguientes registros : \n")
+        for i, v in enumerate(registros_esclavo):
+            print(f"{i} -> {v}")
+
+        repeat = input("Desea seguir leyendo registros? (Y\N)").lower()
+
+        lectura_registros_flag = True if repeat == 'Y' else False
