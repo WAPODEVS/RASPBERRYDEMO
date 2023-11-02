@@ -1,10 +1,8 @@
 # Librerías
-import time
+from prettytable import PrettyTable
 from pymodbus.client import ModbusSerialClient
-import asyncio
-from pymodbus.client import AsyncModbusSerialClient
-from pymodbus.pdu import ExceptionResponse
 from pymodbus.transaction import ModbusRtuFramer
+from pymodbus.pdu import ExceptionResponse
 
 # Clase Principal
 class Modbus:
@@ -16,37 +14,38 @@ class Modbus:
         self.bytesize=bytesize
         self.parity=parity
         self.stopbits=stopbits
-        self.client = ModbusSerialClient(self.port,self.framer,self.baudrate,self.bytesize,self.parity,self.stopbits,)
+        self.client = ModbusSerialClient(self.port,self.framer,self.baudrate,self.bytesize,self.parity,self.stopbits)
+
+        if self.client.connect():
+            print("################")
+            print("Conexión exitosa")
+            print("################\n")
     
     def leer_registros(self, registro_inicio, num_registros,esclavo):
-        try:
-            self.rr =self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave=esclavo)
-        except Exception as exc:
-            print(f"Error: {exc}")
+
+        rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave=esclavo)
             
-        if self.rr.isError():
-            print(f"Received Modbus library error({self.rr})")
-        elif isinstance(self.rr, ExceptionResponse):
-            print(f"Received Modbus library exception ({self.rr})")
+        if rr.isError():
+            print(f"Received Modbus library error({rr})")
+        elif isinstance(rr, ExceptionResponse):
+            print(f"Received Modbus library exception ({rr})")
         else:
-            return self.rr.registers
+            return rr.registers
         
     def leer_coils(self, coil_inicio, num_coils, esclavo):
-        try:
-            self.coils =self.client.read_coils(address = coil_inicio, count = num_coils, slave = esclavo)        
-        except Exception as exc:
-            print(f"Error: {exc}")
+        
+        coils = self.client.read_coils(address = coil_inicio, count = num_coils, slave = esclavo)        
             
-        if self.coils.isError():
-            print(f"Received Modbus library error({self.coils})")
-        elif isinstance(self.coils, ExceptionResponse):
-            print(f"Received Modbus library exception ({self.coils})")
+        if coils.isError():
+            print(f"Received Modbus library error({coils})")
+        elif isinstance(coils, ExceptionResponse):
+            print(f"Received Modbus library exception ({coils})")
         else:
-            return self.coils.registers
+            return coils.registers
 
     def escribir_register(self, registro, valor, esclavo):
         try:
-            self.client.write_register(address = registro,value = valor, slave = esclavo)
+            self.client.write_register(address = registro, value = valor, slave = esclavo)
         except Exception as exc:
             print(f"Error de comunicación Modbus: {exc}")
 
@@ -54,7 +53,7 @@ class Modbus:
         try:
             self.client.write_coil(address = coil,value = valor, slave = esclavo)
         except Exception as exc:
-            print(f"Error de comunicacion modbus:{exc}")
+            print(f"Error de comunicacion Modbus: {exc}")
                 
 #programa principal   
 if __name__ == "__main__":
@@ -63,10 +62,7 @@ if __name__ == "__main__":
     lectura_registros_flag = True
 
     # Creacion del objeto modbus
-    modbus0 = Modbus(port = "RR", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
-
-    if modbus0.connect():
-        print("Conexión exitosa")
+    modbus0 = Modbus(port = "COM4", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
 
     # Prueba de escritura de registros
 
@@ -76,13 +72,13 @@ if __name__ == "__main__":
 
     while escritura_registros_flag:
 
-        registro = int(input("Ingrese la dirección del registro al que quiere escribir un valor :"))
-        value = int(input("Ingrese el valor que quiere enviar al esclavo : "))
+        registro = int(input("Ingrese la dirección del registro al que quiere escribir un valor : "))
+        valor = int(input("Ingrese el valor que quiere enviar al esclavo : "))
         slaveID = int(input("Ingresar el ID del esclavo al que desea enviar el dato : "))
 
-        modbus0.escribir_register(registro = registro, value = value, slave = slaveID)
+        modbus0.escribir_register(registro = registro, valor = valor, esclavo = slaveID)
 
-        repeat = input("Desea seguir escribiendo registros? (Y\N)").lower()
+        repeat = input("Desea seguir escribiendo registros? (Y/N) : ").upper()
 
         escritura_registros_flag = True if repeat == 'Y' else False
 
@@ -94,16 +90,19 @@ if __name__ == "__main__":
 
     while lectura_registros_flag:
 
-        registro_inicio = int(print("Ingrese la dirección del registro donde se iniciará la lectura : "))
-        num_registros = int(print("Ingrese la cantidad de registros que desea leer : "))
+        registro_inicio = int(input("Ingrese la dirección del registro donde se iniciará la lectura : "))
+        num_registros = int(input("Ingrese la cantidad de registros que desea leer : "))
         slaveID = int(input("Ingresar el ID del esclavo al que desea enviar el dato : "))
 
         registros_esclavo = modbus0.leer_registros(registro_inicio = registro_inicio, num_registros = num_registros, esclavo = slaveID)
 
         print("\nSe leyeron los siguientes registros : \n")
+        table = PrettyTable()
+        table.field_names = ["Registro", "Valor"]
         for i, v in enumerate(registros_esclavo):
-            print(f"{i} -> {v}")
-
-        repeat = input("Desea seguir leyendo registros? (Y\N)").lower()
+            table.add_row([i, v])
+        print(table)
+        
+        repeat = input("Desea seguir leyendo registros? (Y/N) : ").upper()
 
         lectura_registros_flag = True if repeat == 'Y' else False
