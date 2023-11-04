@@ -1,5 +1,5 @@
 # Librerías
-from prettytable import PrettyTable
+import time
 from pymodbus.client import ModbusSerialClient
 from pymodbus.transaction import ModbusRtuFramer
 from pymodbus.pdu import ExceptionResponse
@@ -15,15 +15,10 @@ class Modbus:
         self.parity = parity
         self.stopbits = stopbits
         self.client = ModbusSerialClient(self.port, self.framer, self.baudrate, self.bytesize, self.parity, self.stopbits)
-
-        if self.client.connect():
-            print("\n################")
-            print("Conexión exitosa")
-            print("################\n")
     
     def leer_registros(self, registro_inicio, num_registros,esclavo):
 
-        rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave=esclavo)
+        rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave = esclavo)
             
         if rr.isError():
             print(f"Received Modbus library error({rr})")
@@ -54,7 +49,7 @@ class Modbus:
             self.client.write_coil(address = coil,value = valor, slave = esclavo)
         except Exception as exc:
             print(f"Error de comunicacion Modbus: {exc}")
-                
+     
 #programa principal   
 if __name__ == "__main__":
 
@@ -65,12 +60,16 @@ if __name__ == "__main__":
     if modbus0.client.connect():
         print("================")
         print("Conexión exitosa")
-        print("================\n")       
+        print("================\n")
 
+    # Prueba de lectura del sensor de nivel de agua       
 
+    try:
+        while True:
+            registros_sensor = modbus0.leer_registros(registro_inicio = 0, num_registros = 10, esclavo = 1)
+            nivel_agua = registros_sensor[4]
+            print(f"El nivel de agua actualmente es de {nivel_agua} cm")
+            time.sleep(2)
 
-
-
-
-
-
+    except KeyboardInterrupt:
+        print("Programa finalizado por el usuario")
