@@ -7,19 +7,14 @@ from pymodbus.pdu import ExceptionResponse
 # Clase Principal
 class Modbus:
     def __init__(self, port, timeout, baudrate, bytesize, parity, stopbits):
-        self.port=port
-        self.framer=ModbusRtuFramer
-        self.timeout=timeout
-        self.baudrate=baudrate
-        self.bytesize=bytesize
-        self.parity=parity
-        self.stopbits=stopbits
-        self.client = ModbusSerialClient(self.port,self.framer,self.baudrate,self.bytesize,self.parity,self.stopbits)
-
-        if self.client.connect():
-            print("################")
-            print("Conexión exitosa")
-            print("################\n")
+        self.port = port
+        self.framer = ModbusRtuFramer
+        self.timeout = timeout
+        self.baudrate = baudrate
+        self.bytesize = bytesize
+        self.parity = parity
+        self.stopbits = stopbits
+        self.client = ModbusSerialClient(self.port, self.framer, self.baudrate, self.bytesize, self.parity, self.stopbits)
     
     def leer_registros(self, registro_inicio, num_registros,esclavo):
 
@@ -43,13 +38,13 @@ class Modbus:
         else:
             return coils.registers
 
-    def escribir_register(self, registro, valor, esclavo):
+    def escribir_registro(self, registro, valor, esclavo):
         try:
             self.client.write_register(address = registro, value = valor, slave = esclavo)
         except Exception as exc:
             print(f"Error de comunicación Modbus: {exc}")
 
-    def escribir_coil(self,coil,valor,esclavo):
+    def escribir_coil(self, coil, valor, esclavo):
         try:
             self.client.write_coil(address = coil,value = valor, slave = esclavo)
         except Exception as exc:
@@ -64,8 +59,12 @@ if __name__ == "__main__":
     # Creacion del objeto modbus
     modbus0 = Modbus(port = "COM4", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
 
-    # Prueba de escritura de registros
+    if modbus0.client.connect():
+        print("================")
+        print("Conexión exitosa")
+        print("================\n")
 
+    # Prueba de escritura de registros
     print("================================")
     print("Prueba de escritura de registros")
     print("================================")
@@ -76,7 +75,7 @@ if __name__ == "__main__":
         valor = int(input("Ingrese el valor que quiere enviar al esclavo : "))
         slaveID = int(input("Ingresar el ID del esclavo al que desea enviar el dato : "))
 
-        modbus0.escribir_register(registro = registro, valor = valor, esclavo = slaveID)
+        modbus0.escribir_registro(registro = registro, valor = valor, esclavo = slaveID)
 
         repeat = input("Desea seguir escribiendo registros? (Y/N) : ").upper()
 
