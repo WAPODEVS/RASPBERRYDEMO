@@ -18,7 +18,7 @@ class Modbus:
     
     def leer_registros(self, registro_inicio, num_registros,esclavo):
 
-        rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave=esclavo)
+        rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave = esclavo)
             
         if rr.isError():
             print(f"Received Modbus library error({rr})")
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
         registro_inicio = int(input("Ingrese la dirección del registro donde se iniciará la lectura : "))
         num_registros = int(input("Ingrese la cantidad de registros que desea leer : "))
-        slaveID = int(input("Ingresar el ID del esclavo al que desea enviar el dato : "))
+        slaveID = int(input("Ingresar el ID del esclavo al cual desea leer los registros : "))
 
         registros_esclavo = modbus0.leer_registros(registro_inicio = registro_inicio, num_registros = num_registros, esclavo = slaveID)
 
