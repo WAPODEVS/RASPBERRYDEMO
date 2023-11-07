@@ -89,13 +89,12 @@ def verificar_conexion():
 # Programa principal   
 if __name__ == "__main__":
 
-    # Creacion del objeto modbus
-    modbus0 = Modbus(port = "/dev/ttyUSB0", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
-
     print("======================")
     print("        DEMO 1       ")
     print("======================")
 
+    # Creacion del objeto modbus
+    modbus0 = Modbus(port = "/dev/ttyUSB0", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
     verificar_conexion()
 
     while True:
