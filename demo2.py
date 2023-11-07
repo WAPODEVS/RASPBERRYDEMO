@@ -1,5 +1,9 @@
 # Librerías
 import time
+import random
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from datetime import datetime
 from pymodbus.client import ModbusSerialClient
 from pymodbus.transaction import ModbusRtuFramer
 from pymodbus.pdu import ExceptionResponse
@@ -49,27 +53,55 @@ class Modbus:
             self.client.write_coil(address = coil,value = valor, slave = esclavo)
         except Exception as exc:
             print(f"Error de comunicacion Modbus: {exc}")
-     
+
+# Comprando la conexión
+def verificar_conexion():
+    if modbus0.client.connect():
+        print("\n----CONEXION EXITOSA----\n")
+
+# Creación del gráfico tiempo vs nivel
+def plot_time_water_level(tiempo, nivel_agua):
+    # Crear figura y ejes
+    fig, ax = plt.subplots()
+
+    # Configuración del formato de fecha
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+
+    ax.plot(tiempo, nivel_agua, color = 'blue', marker = 'o', linestyle = '-', markersize = 6, linewidth = 2, markerfacecolor = 'black')
+    plt.xticks(rotation = 45)
+
+    # Etiquetas y título
+    plt.xlabel("Tiempo")
+    plt.ylabel("Nivel de agua (cm)")
+    plt.title("Gráfico tiempo vs nivel de agua (cm)")
+
+    # Mostrar gráfico
+    plt.tight_layout()
+    plt.show()
+
 #programa principal   
 if __name__ == "__main__":
 
-    # Creacion del objeto modbus
-    modbus0 = Modbus(port = "COM4", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
+    # Creación del objeto modbus
+    modbus0 = Modbus(port = "/dev/ttyUSB0", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
+    verificar_conexion()
+    
+    # Variables para guardar los valores que se plotearán
+    niveles = []
+    horas = []
 
-    # Verificando la conexión
-    if modbus0.client.connect():
-        print("================")
-        print("Conexión exitosa")
-        print("================\n")
-
-    # Prueba de lectura del sensor de nivel de agua       
-
+    # Prueba de lectura del sensor de nivel de agua 
     try:
         while True:
-            registros_sensor = modbus0.leer_registros(registro_inicio = 0, num_registros = 10, esclavo = 1)
-            nivel_agua = registros_sensor[4]
+            #registros_sensor = modbus0.leer_registros(registro_inicio = 0, num_registros = 10, esclavo = 1)
+            #nivel_agua = registros_sensor[4]
+            nivel_agua = random.randint(20, 30)
+            niveles.append(nivel_agua)
+            hora_actual = datetime.now()
+            horas.append(hora_actual)
             print(f"El nivel de agua actualmente es de {nivel_agua} cm")
-            time.sleep(2)
+            time.sleep(1)
 
     except KeyboardInterrupt:
+        plot_time_water_level(horas, niveles)
         print("Programa finalizado por el usuario")
