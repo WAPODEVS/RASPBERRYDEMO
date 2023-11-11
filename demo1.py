@@ -6,10 +6,9 @@ from pymodbus.pdu import ExceptionResponse
 
 # Clase Principal
 class Modbus:
-    def __init__(self, port, timeout, baudrate, bytesize, parity, stopbits):
+    def __init__(self, port, baudrate, bytesize, parity, stopbits):
         self.port = port
         self.framer = ModbusRtuFramer
-        self.timeout = timeout
         self.baudrate = baudrate
         self.bytesize = bytesize
         self.parity = parity
@@ -23,7 +22,7 @@ class Modbus:
         if rr.isError():
             print(f"Received Modbus library error({rr})")
         elif isinstance(rr, ExceptionResponse):
-            print(f"Received Modbus library exception ({rr})")
+            print(f"Received Modbus library exception({rr})")
         else:
             return rr.registers
         
@@ -34,7 +33,7 @@ class Modbus:
         if coils.isError():
             print(f"Received Modbus library error({coils})")
         elif isinstance(coils, ExceptionResponse):
-            print(f"Received Modbus library exception ({coils})")
+            print(f"Received Modbus library exception({coils})")
         else:
             return coils.registers
 
@@ -46,11 +45,11 @@ class Modbus:
 
     def escribir_coil(self, coil, valor, esclavo):
         try:
-            self.client.write_coil(address = coil,value = valor, slave = esclavo)
+            self.client.write_coil(address = coil, value = valor, slave = esclavo)
         except Exception as exc:
             print(f"Error de comunicacion Modbus: {exc}")
 
-# Tabla menu
+# Tabla Menú
 def print_menu_table():
     tabla_menu = PrettyTable()
     tabla_menu.field_names = ["Opcion", "Descripcion"]
@@ -81,9 +80,9 @@ def leer_registros_demo():
         table.add_row([i + registro_inicio, v])
     print(table)   
 
-# Comprando la conexión
-def verificar_conexion():
-    if modbus0.client.connect():
+# Comprobando la conexión
+def verificar_conexion(modbus_object):
+    if modbus_object.client.connect():
         print("\n----CONEXION EXITOSA----\n")
 
 # Programa principal   
@@ -93,9 +92,9 @@ if __name__ == "__main__":
     print("        DEMO 1       ")
     print("======================")
 
-    # Creacion del objeto modbus
-    modbus0 = Modbus(port = "/dev/ttyUSB0", timeout = 10, baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
-    verificar_conexion()
+    # Creación del objeto modbus
+    modbus0 = Modbus(port = "/dev/ttyUSB0", baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
+    verificar_conexion(modbus0)
 
     while True:
         print_menu_table()
@@ -108,5 +107,5 @@ if __name__ == "__main__":
         elif opcion == '2':
             leer_registros_demo()
         else:
-            print("Programa terminado")
+            print("Programa terminado") 
             break
