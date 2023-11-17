@@ -3,6 +3,7 @@ from prettytable import PrettyTable
 from pymodbus.client import ModbusSerialClient
 from pymodbus.transaction import ModbusRtuFramer
 from pymodbus.pdu import ExceptionResponse
+from pymodbus.exceptions import *
 
 # Clase Principal
 class Modbus:
@@ -14,17 +15,20 @@ class Modbus:
         self.parity = parity
         self.stopbits = stopbits
         self.client = ModbusSerialClient(self.port, self.framer, self.baudrate, self.bytesize, self.parity, self.stopbits)
-    
+        self.rr = []
+
     def leer_registros(self, registro_inicio, num_registros,esclavo):
 
-        rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave = esclavo)
+        try: 
+            self.rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave = esclavo, haha = 3)
+
+            if isinstance(self.rr, ExceptionResponse):
+                print(f"Error -> {self.rr}")
+            else:
+                return self.rr.registers
             
-        if rr.isError():
-            print(f"Received Modbus library error({rr})")
-        elif isinstance(rr, ExceptionResponse):
-            print(f"Received Modbus library exception({rr})")
-        else:
-            return rr.registers
+        except Exception as exc:
+            print(f"Error -> {exc}")
         
     def leer_coils(self, coil_inicio, num_coils, esclavo):
         
@@ -41,13 +45,17 @@ class Modbus:
         try:
             self.client.write_register(address = registro, value = valor, slave = esclavo)
         except Exception as exc:
-            print(f"Error de comunicación Modbus: {exc}")
+            print(f"Error -> {exc}")
 
     def escribir_coil(self, coil, valor, esclavo):
         try:
             self.client.write_coil(address = coil, value = valor, slave = esclavo)
         except Exception as exc:
-            print(f"Error de comunicacion Modbus: {exc}")
+            print(f"Error -> {exc}")
+    
+    def verificar_conexion(self):
+        if self.client.connect():
+            print("\n----CONEXION EXITOSA----\n")
 
 # Tabla Menú
 def print_menu_table():
@@ -73,17 +81,15 @@ def leer_registros_demo():
 
     registros_esclavo = modbus0.leer_registros(registro_inicio = registro_inicio, num_registros = num_registros, esclavo = slaveID)
 
-    print("\nSe leyeron los siguientes registros : \n")
-    table = PrettyTable()
-    table.field_names = ["Registro", "Valor"]
-    for i, v in enumerate(registros_esclavo):
-        table.add_row([i + registro_inicio, v])
-    print(table)   
-
-# Comprobando la conexión
-def verificar_conexion(modbus_object):
-    if modbus_object.client.connect():
-        print("\n----CONEXION EXITOSA----\n")
+    if not registros_esclavo:
+        print("No se recibieron los registros correctamente")
+    else:    
+        print("\nSe leyeron los siguientes registros : \n")
+        table = PrettyTable()
+        table.field_names = ["Registro", "Valor"]
+        for i, v in enumerate(registros_esclavo):
+            table.add_row([i + registro_inicio, v])
+        print(table)   
 
 # Programa principal   
 if __name__ == "__main__":
@@ -94,7 +100,7 @@ if __name__ == "__main__":
 
     # Creación del objeto modbus
     modbus0 = Modbus(port = "/dev/ttyUSB0", baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
-    verificar_conexion(modbus0)
+    modbus0.verificar_conexion()
 
     while True:
         print_menu_table()
