@@ -18,45 +18,51 @@ class Modbus:
         self.parity = parity
         self.stopbits = stopbits
         self.client = ModbusSerialClient(self.port, self.framer, self.baudrate, self.bytesize, self.parity, self.stopbits)
-    
+        self.rr = []
+        self.coils = []
+
     def leer_registros(self, registro_inicio, num_registros,esclavo):
 
-        rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave = esclavo)
+        try: 
+            self.rr = self.client.read_holding_registers(address = registro_inicio, count = num_registros, slave = esclavo, haha = 3)
+
+            if isinstance(self.rr, ExceptionResponse):
+                print(f"Error -> {self.rr}")
+            else:
+                return self.rr.registers
             
-        if rr.isError():
-            print(f"Received Modbus library error({rr})")
-        elif isinstance(rr, ExceptionResponse):
-            print(f"Received Modbus library exception ({rr})")
-        else:
-            return rr.registers
+        except Exception as exc:
+            print(f"Error -> {exc}")
         
     def leer_coils(self, coil_inicio, num_coils, esclavo):
-        
-        coils = self.client.read_coils(address = coil_inicio, count = num_coils, slave = esclavo)        
+
+        try: 
+            self.coils = self.client.read_coils(address = coil_inicio, count = num_coils, slave = esclavo)
+
+            if isinstance(self.coils, ExceptionResponse):
+                print(f"Error -> {self.coils}")
+            else:
+                return self.rr.coils
             
-        if coils.isError():
-            print(f"Received Modbus library error({coils})")
-        elif isinstance(coils, ExceptionResponse):
-            print(f"Received Modbus library exception ({coils})")
-        else:
-            return coils.registers
+        except Exception as exc:
+            print(f"Error -> {exc}")            
 
     def escribir_registro(self, registro, valor, esclavo):
         try:
             self.client.write_register(address = registro, value = valor, slave = esclavo)
         except Exception as exc:
-            print(f"Error de comunicación Modbus: {exc}")
+            print(f"Error -> {exc}")
 
     def escribir_coil(self, coil, valor, esclavo):
         try:
-            self.client.write_coil(address = coil,value = valor, slave = esclavo)
+            self.client.write_coil(address = coil, value = valor, slave = esclavo)
         except Exception as exc:
-            print(f"Error de comunicacion Modbus: {exc}")
+            print(f"Error -> {exc}")
+    
+    def verificar_conexion(self):
+        if self.client.connect():
+            print("\n----CONEXION EXITOSA----\n")
 
-# Comprobando la conexión
-def verificar_conexion(modbus_object):
-    if modbus_object.client.connect():
-        print("\n----CONEXION EXITOSA----\n")
 
 # Creación del gráfico tiempo vs nivel
 def plot_time_water_level(tiempo, nivel_agua):
@@ -89,7 +95,7 @@ if __name__ == "__main__":
 
     # Creación del objeto modbus
     modbus0 = Modbus(port = "/dev/ttyUSB0", baudrate = 9600, bytesize = 8, parity = "N", stopbits = 1)
-    verificar_conexion(modbus0)
+    modbus0.verificar_conexion()
     
     # Variables para guardar los valores que se plotearán
     niveles = []
