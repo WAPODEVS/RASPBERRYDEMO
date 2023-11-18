@@ -16,6 +16,7 @@ class Modbus:
         self.stopbits = stopbits
         self.client = ModbusSerialClient(self.port, self.framer, self.baudrate, self.bytesize, self.parity, self.stopbits)
         self.rr = []
+        self.coils = []
 
     def leer_registros(self, registro_inicio, num_registros,esclavo):
 
@@ -31,15 +32,17 @@ class Modbus:
             print(f"Error -> {exc}")
         
     def leer_coils(self, coil_inicio, num_coils, esclavo):
-        
-        coils = self.client.read_coils(address = coil_inicio, count = num_coils, slave = esclavo)        
+
+        try: 
+            self.coils = self.client.read_coils(address = coil_inicio, count = num_coils, slave = esclavo)
+
+            if isinstance(self.coils, ExceptionResponse):
+                print(f"Error -> {self.coils}")
+            else:
+                return self.rr.coils
             
-        if coils.isError():
-            print(f"Received Modbus library error({coils})")
-        elif isinstance(coils, ExceptionResponse):
-            print(f"Received Modbus library exception({coils})")
-        else:
-            return coils.registers
+        except Exception as exc:
+            print(f"Error -> {exc}")            
 
     def escribir_registro(self, registro, valor, esclavo):
         try:
